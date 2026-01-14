@@ -1,0 +1,561 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// SECURITY & USERS
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  auditLogs        AuditLog[]
+  openedRegisters  CashRegister[] @relation("OpenedBy")
+  closedRegisters  CashRegister[] @relation("ClosedBy")
+
+  @@index([email])
+  @@index([roleId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  module      String   // 'ingredients', 'recipes', 'orders', etc.
+  action      String   // 'create', 'read', 'update', 'delete', 'approve'
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // 'login', 'price_change', 'order_cancel', 'cash_close'
+  module    String   // 'auth', 'products', 'orders', 'billing'
+  entityId  String?  // ID of affected record
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============================================
+// INGREDIENTS & RECIPES
+// ============================================
+
+enum UnitType {
+  KILOGRAM
+  GRAM
+  LITER
+  MILLILITER
+  UNIT
+}
+
+model Ingredient {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  unit        UnitType
+  currentCost Decimal  @db.Decimal(10, 2)
+  minStock    Decimal? @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  costHistory    IngredientCostHistory[]
+  recipeItems    RecipeItem[]
+  stockMovements StockMovement[]
+
+  @@index([name])
+}
+
+model IngredientCostHistory {
+  id           String   @id @default(uuid())
+  ingredientId String
+  cost         Decimal  @db.Decimal(10, 2)
+  effectiveAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([ingredientId, effectiveAt])
+}
+
+model Preparation {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  yield       Decimal  @db.Decimal(10, 3) // Rendimiento (quantity produced)
+  yieldUnit   UnitType
+  laborCost   Decimal  @default(0) @db.Decimal(10, 2) // Costo de elaboración
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  usedInRecipeItems RecipeItem[]
+
+  @@index([name])
+}
+
+model Recipe {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  servings    Int      @default(1) // Número de porciones
+  mermaPercent Decimal? @db.Decimal(5, 2) // Porcentaje de merma
+  grossWeight Decimal? @db.Decimal(10, 3) // Peso bruto (con merma)
+  netWeight   Decimal? @db.Decimal(10, 3) // Peso neto (sin merma)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  items      RecipeItem[]
+  product    Product?
+  orderItems OrderItem[]
+
+  @@index([name])
+}
+
+model RecipeItem {
+  id        String   @id @default(uuid())
+  recipeId  String
+  amount    Decimal  @db.Decimal(10, 3)
+  unit      UnitType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Polymorphic relation: can be Ingredient OR Preparation
+  ingredientId   String?
+  preparationId  String?
+
+  recipe      Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient  Ingredient?  @relation(fields: [ingredientId], references: [id])
+  preparation Preparation? @relation(fields: [preparationId], references: [id])
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@index([preparationId])
+}
+
+// ============================================
+// PRODUCTS & STOCK
+// ============================================
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([order])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  categoryId  String?
+  recipeId    String?  @unique // 1:1 for costed products
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  category Category? @relation(fields: [categoryId], references: [id])
+  recipe   Recipe?   @relation(fields: [recipeId], references: [id])
+
+  variants       ProductVariant[]
+  orderItems     OrderItem[]
+  stockMovements StockMovement[]
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model ProductVariant {
+  id          String   @id @default(uuid())
+  productId   String
+  name        String   // e.g., "Grande", "Mediano"
+  price       Decimal  @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+enum MovementType {
+  PURCHASE       // Compra
+  SALE           // Venta
+  PRODUCTION     // Elaboración
+  ADJUSTMENT     // Ajuste de inventario
+  WASTE          // Desperdicio
+  EXPIRATION     // Vencimiento
+}
+
+model StockMovement {
+  id           String       @id @default(uuid())
+  type         MovementType
+  quantity     Decimal      @db.Decimal(10, 3)
+  unitCost     Decimal?     @db.Decimal(10, 2)
+  reason       String?
+  reference    String?      // Invoice number, order ID, etc.
+  createdAt    DateTime     @default(now())
+
+  // Polymorphic: can be Product OR Ingredient
+  productId    String?
+  ingredientId String?
+
+  product    Product?    @relation(fields: [productId], references: [id])
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([ingredientId, createdAt])
+  @@index([type])
+}
+
+// ============================================
+// POS & ORDERS
+// ============================================
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+model Table {
+  id        String      @id @default(uuid())
+  number    Int         @unique
+  capacity  Int
+  status    TableStatus @default(AVAILABLE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  orders       Order[]
+  reservations Reservation[]
+
+  @@index([status])
+}
+
+enum OrderStatus {
+  OPEN
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CLOSED
+  CANCELED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     Int         @unique @default(autoincrement())
+  tableId         String
+  status          OrderStatus @default(OPEN)
+  observations    String?
+  subtotal        Decimal     @default(0) @db.Decimal(10, 2)
+  total           Decimal     @default(0) @db.Decimal(10, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  closedAt        DateTime?
+  canceledAt      DateTime?
+  cancellationReason String?
+
+  table Table @relation(fields: [tableId], references: [id])
+
+  items    OrderItem[]
+  invoices Invoice[]
+
+  @@index([tableId, status])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum KitchenStation {
+  KITCHEN
+  BAR
+  PASTRY
+}
+
+model OrderItem {
+  id           String         @id @default(uuid())
+  orderId      String
+  productId    String
+  recipeId     String?        // For cost tracking
+  quantity     Int
+  unitPrice    Decimal        @db.Decimal(10, 2)
+  subtotal     Decimal        @db.Decimal(10, 2)
+  observations String?
+  station      KitchenStation @default(KITCHEN)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product  @relation(fields: [productId], references: [id])
+  recipe  Recipe?  @relation(fields: [recipeId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ============================================
+// BILLING & PAYMENTS
+// ============================================
+
+enum InvoiceType {
+  A  // Responsable inscripto
+  B  // Consumidor final
+  C  // Monotributista
+  TICKET
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELED
+}
+
+model Invoice {
+  id              String        @id @default(uuid())
+  invoiceNumber   String        @unique
+  type            InvoiceType
+  status          InvoiceStatus @default(PENDING)
+  orderId         String
+  customerName    String?
+  customerTaxId   String?       // CUIT/CUIL
+  subtotal        Decimal       @db.Decimal(10, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  afipCAE         String?       // Código de Autorización Electrónico
+  afipCAEExpiry   DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  canceledAt      DateTime?
+
+  order    Order     @relation(fields: [orderId], references: [id])
+  payments Payment[]
+
+  @@index([invoiceNumber])
+  @@index([orderId])
+  @@index([status])
+}
+
+model PaymentMethod {
+  id             String   @id @default(uuid())
+  name           String   @unique // Efectivo, Transferencia, Crédito, etc.
+  commission     Decimal  @default(0) @db.Decimal(5, 2) // Percentage
+  isActive       Boolean  @default(true)
+  requiresOnline Boolean  @default(false) // For QR/online payments
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([isActive])
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  paymentMethodId String
+  amount          Decimal  @db.Decimal(10, 2)
+  commission      Decimal  @default(0) @db.Decimal(10, 2)
+  reference       String?  // Transaction ID, check number, etc.
+  createdAt       DateTime @default(now())
+
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  @@index([invoiceId])
+  @@index([paymentMethodId])
+}
+
+enum CashRegisterStatus {
+  OPEN
+  CLOSED
+}
+
+model CashRegister {
+  id              String             @id @default(uuid())
+  status          CashRegisterStatus @default(CLOSED)
+  openedById      String
+  closedById      String?
+  initialAmount   Decimal            @db.Decimal(10, 2)
+  finalAmount     Decimal?           @db.Decimal(10, 2)
+  expectedAmount  Decimal?           @db.Decimal(10, 2)
+  difference      Decimal?           @db.Decimal(10, 2)
+  openedAt        DateTime           @default(now())
+  closedAt        DateTime?
+  notes           String?
+
+  openedBy User  @relation("OpenedBy", fields: [openedById], references: [id])
+  closedBy User? @relation("ClosedBy", fields: [closedById], references: [id])
+
+  @@index([status])
+  @@index([openedAt])
+}
+
+// ============================================
+// RESERVATIONS
+// ============================================
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  SEATED
+  NO_SHOW
+  CANCELED
+}
+
+model Reservation {
+  id           String            @id @default(uuid())
+  customerName String
+  customerPhone String
+  customerEmail String?
+  partySize    Int
+  date         DateTime
+  timeSlot     String            // e.g., "20:00-22:00"
+  status       ReservationStatus @default(PENDING)
+  tableId      String?
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  canceledAt   DateTime?
+
+  table Table? @relation(fields: [tableId], references: [id])
+
+  @@index([date, status])
+  @@index([tableId])
+}
+
+// ============================================
+// PURCHASES & EXPENSES
+// ============================================
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  taxId     String?  // CUIT
+  phone     String?
+  email     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases Purchase[]
+
+  @@index([name])
+}
+
+enum PurchaseStatus {
+  PENDING
+  RECEIVED
+  CANCELED
+}
+
+model Purchase {
+  id           String         @id @default(uuid())
+  supplierId   String
+  invoiceNumber String?
+  status       PurchaseStatus @default(PENDING)
+  total        Decimal        @db.Decimal(10, 2)
+  notes        String?
+  purchaseDate DateTime       @default(now())
+  dueDate      DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([purchaseDate])
+}
+
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses Expense[]
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  categoryId  String
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  expenseDate DateTime @default(now())
+  reference   String?  // Invoice number, receipt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([expenseDate])
+}
