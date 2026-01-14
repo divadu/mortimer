@@ -1,0 +1,258 @@
+A continuación se presentan **prompts parciales por módulo**, diseñados específicamente para usarse **uno por uno en GitHub Copilot Chat**.
+Cada prompt es **autocontenido**, accionable y coherente con el README, permitiendo avanzar de forma incremental sin perder consistencia arquitectónica.
+
+La recomendación es **copiar y pegar cada prompt en Copilot Chat**, respetando el orden sugerido.
+
+---
+
+# PROMPTS MODULARES PARA COPILOT CHAT
+
+---
+
+## 🔐 MÓDULO 1 — Usuarios, roles y autenticación
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Usuarios y Seguridad** para una aplicación NestJS con Prisma y PostgreSQL.
+>
+> Requisitos:
+>
+> * Modelos: User, Role, Permission, AuditLog.
+> * Autenticación JWT.
+> * Roles configurables con permisos por módulo y acción.
+> * Auditoría obligatoria para acciones críticas (login, cambios de precios, anulaciones, cierres de caja).
+> * Estructura modular: controller, service, DTOs, guards, decorators.
+> * Validaciones con class-validator.
+> * Endpoints:
+>
+>   * POST /auth/login
+>   * POST /users
+>   * GET /users
+> * Semilla inicial con roles: admin, manager, cashier, waiter, kitchen.
+>
+> Usa buenas prácticas NestJS y Prisma.
+
+---
+
+## 🧾 MÓDULO 2 — Insumos, recetas y escandallos
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Insumos, Recetas y Costos Gastronómicos**.
+>
+> Modelos requeridos:
+>
+> * Ingredient (materia prima)
+> * IngredientCostHistory
+> * Preparation (elaboración intermedia)
+> * Recipe
+> * RecipeItem
+>
+> Reglas de negocio:
+>
+> * Unidades de medida convertibles (kg, g, l, unidad).
+> * Merma configurable (% o neto/bruto).
+> * Historial de costos por fecha.
+> * Elaboraciones reutilizables como ingredientes.
+> * Cálculo automático de escandallo y costo por porción.
+>
+> Endpoints mínimos:
+>
+> * POST /ingredients
+> * POST /preparations
+> * POST /recipes
+> * GET /recipes/:id/cost
+>
+> Implementa servicios desacoplados para cálculo de costos.
+
+---
+
+## 📦 MÓDULO 3 — Productos y stock
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Productos y Gestión de Stock**.
+>
+> Modelos:
+>
+> * Product
+> * ProductVariant
+> * Category
+> * Stock
+> * StockMovement
+>
+> Reglas:
+>
+> * Cada venta o producción descuenta stock automáticamente.
+> * No permitir ventas si el stock es insuficiente.
+> * Manejar stock mínimo con alertas.
+> * Registrar ajustes, inventarios y desperdicios.
+>
+> Endpoints:
+>
+> * POST /products
+> * GET /products
+> * POST /stock/move
+> * GET /stock
+>
+> Asegura integridad transaccional en movimientos de stock.
+
+---
+
+## 🍽️ MÓDULO 4 — Salón, mesas y pedidos (POS)
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Salón y Pedidos (POS)**.
+>
+> Modelos:
+>
+> * Table
+> * Order
+> * OrderItem
+> * OrderStatus
+>
+> Reglas:
+>
+> * Mesas con capacidad, estado y posibilidad de unión/separación.
+> * Estados del pedido: OPEN, IN_PROGRESS, READY, DELIVERED, CLOSED, CANCELED.
+> * Envío de comandas a cocina/bar (simulado por ahora).
+> * División de cuentas.
+> * Observaciones por ítem.
+> * Anulaciones deben generar auditoría.
+>
+> Endpoints:
+>
+> * POST /orders
+> * POST /orders/:id/items
+> * POST /orders/:id/close
+> * POST /orders/:id/cancel
+
+---
+
+## 💳 MÓDULO 5 — Pagos, caja y facturación
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Pagos, Caja y Facturación**.
+>
+> Modelos:
+>
+> * Ticket
+> * Invoice
+> * Payment
+> * PaymentMethod
+> * CashRegister
+>
+> Requisitos:
+>
+> * Métodos de pago: efectivo, transferencia, crédito, débito, QR.
+> * Comisiones configurables por medio de pago.
+> * Apertura y cierre de caja por turno y usuario.
+> * Preparar integración AFIP en un servicio desacoplado (mock).
+> * Soportar Factura A, B y C.
+>
+> Endpoints:
+>
+> * POST /payments
+> * POST /invoices
+> * POST /cash-register/open
+> * POST /cash-register/close
+
+---
+
+## 📅 MÓDULO 6 — Reservas
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Reservas de Mesas**.
+>
+> Modelos:
+>
+> * Reservation
+> * TimeSlot
+>
+> Reglas:
+>
+> * Reservas por fecha, hora y cantidad de personas.
+> * Asignación automática de mesas según capacidad.
+> * Políticas de horario y duración máxima.
+> * Registro de no-shows.
+>
+> Endpoints:
+>
+> * POST /reservations
+> * GET /reservations
+> * POST /reservations/:id/cancel
+>
+> Preparar el módulo para frontend público.
+
+---
+
+## 📊 MÓDULO 7 — Administración y compras
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Compras, Gastos y Proveedores**.
+>
+> Modelos:
+>
+> * Purchase
+> * Supplier
+> * Expense
+> * ExpenseCategory
+>
+> Reglas:
+>
+> * Compras impactan en stock y costos.
+> * Gastos clasificados por categoría.
+> * Control de vencimientos y cuentas a pagar.
+>
+> Endpoints:
+>
+> * POST /purchases
+> * POST /expenses
+> * GET /suppliers
+
+---
+
+## 📈 MÓDULO 8 — Reportes
+
+**Prompt para Copilot Chat:**
+
+> Genera el módulo de **Reportes e Inteligencia de Negocio**.
+>
+> Reportes requeridos:
+>
+> * Ventas por producto y categoría.
+> * Rentabilidad por plato.
+> * Consumo de insumos.
+> * Ingeniería de menú.
+>
+> Requisitos:
+>
+> * Queries optimizadas.
+> * Exportación CSV.
+> * Servicios desacoplados para futura integración con IA.
+>
+> Endpoint base:
+>
+> * GET /reports
+
+---
+
+## 🧭 Recomendación de uso
+
+1. Iniciar con **Módulo 1 (Usuarios)**.
+2. Avanzar secuencialmente.
+3. No modificar modelos ya creados sin ajustar dependencias.
+4. Usar este set como **guía permanente para Copilot Chat**.
+
+---
+
+Si quieres, el siguiente paso puede ser:
+
+* Generar **prompts frontend equivalentes**.
+* Unificar todo en un **prompt para Copilot Workspace / Agents**.
+* Reducir los prompts a un **MVP de 2–3 módulos clave**.
+* Generar un **checklist de validación funcional por módulo**.
