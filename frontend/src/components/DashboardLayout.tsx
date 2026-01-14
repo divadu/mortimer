@@ -28,7 +28,7 @@ import {
   AccountCircle,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const DRAWER_WIDTH = 240;
 

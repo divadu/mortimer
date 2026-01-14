@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Grid,
   Paper,
   Typography,
   Box,
@@ -56,53 +55,43 @@ export const DashboardPage: React.FC = () => {
         Bienvenido al sistema de gestión gastronómica Mortimer
       </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Ventas Hoy"
-            value="$0"
-            icon={<AttachMoney />}
-            color="#4caf50"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Pedidos Activos"
-            value="0"
-            icon={<Restaurant />}
-            color="#2196f3"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Productos"
-            value="0"
-            icon={<ShoppingCart />}
-            color="#ff9800"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Ingresos Mes"
-            value="$0"
-            icon={<TrendingUp />}
-            color="#9c27b0"
-          />
-        </Grid>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 3 }}>
+        <StatCard
+          title="Ventas Hoy"
+          value="$0"
+          icon={<AttachMoney />}
+          color="#4caf50"
+        />
+        <StatCard
+          title="Pedidos Activos"
+          value="0"
+          icon={<Restaurant />}
+          color="#2196f3"
+        />
+        <StatCard
+          title="Productos"
+          value="0"
+          icon={<ShoppingCart />}
+          color="#ff9800"
+        />
+        <StatCard
+          title="Ingresos Mes"
+          value="$0"
+          icon={<TrendingUp />}
+          color="#9c27b0"
+        />
+      </Box>
 
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Sistema Inicializado
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              El backend está corriendo en <strong>http://localhost:3000/api</strong>
-              <br />
-              Comienza agregando insumos, creando recetas y configurando productos.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Sistema Inicializado
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          El backend está corriendo en <strong>http://localhost:3000/api</strong>
+          <br />
+          Comienza agregando insumos, creando recetas y configurando productos.
+        </Typography>
+      </Paper>
     </Box>
   );
 };

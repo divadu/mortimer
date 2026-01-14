@@ -11,7 +11,7 @@ import {
   Container,
 } from '@mui/material';
 import { Restaurant as RestaurantIcon } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -29,8 +29,9 @@ export const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

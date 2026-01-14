@@ -33,7 +33,7 @@ export const authService = {
     return response.data;
   },
 
-  async register(userData: any): Promise<User> {
+  async register(userData: Omit<User, 'id' | 'role'>): Promise<User> {
     const response = await api.post<User>('/auth/register', userData);
     return response.data;
   },
