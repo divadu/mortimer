@@ -18,12 +18,13 @@ import {
   ingredientsService,
   UnitTypeEnum,
   type CreateIngredientDto,
+  type UnitType,
 } from '../services/ingredientsService';
+import { calculateCostPerBaseUnit, getUnitLabel } from '../utils/unitConverter';
 
 const UNIT_OPTIONS = [
   { value: UnitTypeEnum.KILOGRAM, label: 'Kilogramos (kg)' },
   { value: UnitTypeEnum.GRAM, label: 'Gramos (g)' },
-  { value: UnitTypeEnum.LITER, label: 'Litros (l)' },
   { value: UnitTypeEnum.MILLILITER, label: 'Mililitros (ml)' },
   { value: UnitTypeEnum.UNIT, label: 'Unidad' },
 ];
@@ -34,9 +35,16 @@ export default function IngredientFormPage() {
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
+  // Estados para cálculo de merma
   const [grossWeight, setGrossWeight] = useState<string>('');
   const [netWeight, setNetWeight] = useState<string>('');
   const [calculatedWaste, setCalculatedWaste] = useState<number | null>(null);
+
+  // Estados para cálculo de costo
+  const [purchaseQuantity, setPurchaseQuantity] = useState<string>('');
+  const [purchaseCost, setPurchaseCost] = useState<string>('');
+  const [purchaseUnit, setPurchaseUnit] = useState<string>(UnitTypeEnum.KILOGRAM);
+  const [calculatedCostPerUnit, setCalculatedCostPerUnit] = useState<number | null>(null);
 
   const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateIngredientDto>({
     defaultValues: {
@@ -100,6 +108,34 @@ export default function IngredientFormPage() {
     const wastePercentage = ((gross - net) / gross) * 100;
     setCalculatedWaste(wastePercentage);
     setValue('wastePercentage', parseFloat(wastePercentage.toFixed(2)));
+  };
+
+  const calculateCostFromPurchase = () => {
+    const quantity = parseFloat(purchaseQuantity);
+    const cost = parseFloat(purchaseCost);
+
+    if (!quantity || !cost || quantity <= 0 || cost <= 0) {
+      setCalculatedCostPerUnit(null);
+      return;
+    }
+
+    try {
+      const costPerUnit = calculateCostPerBaseUnit(
+        quantity,
+        cost,
+        purchaseUnit as UnitType,
+      );
+      setCalculatedCostPerUnit(costPerUnit);
+      setValue('currentCost', parseFloat(costPerUnit.toFixed(4)));
+      
+      // También guardamos los datos de compra para enviar al backend
+      setValue('purchaseQuantity', quantity);
+      setValue('purchaseCost', cost);
+      setValue('purchaseUnit', purchaseUnit as UnitType);
+    } catch (error) {
+      console.error('Error al calcular costo:', error);
+      setCalculatedCostPerUnit(null);
+    }
   };
 
   const onSubmit = (data: CreateIngredientDto) => {
@@ -198,16 +234,70 @@ export default function IngredientFormPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Costo Actual"
+                    label="Costo por Unidad Base (g o ml)"
                     type="number"
                     fullWidth
-                    inputProps={{ step: '0.01', min: 0 }}
+                    inputProps={{ step: '0.0001', min: 0 }}
                     error={!!errors.currentCost}
-                    helperText={errors.currentCost?.message}
+                    helperText={errors.currentCost?.message || 'Costo por gramo o mililitro'}
                   />
                 )}
               />
             </Box>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+              O calcula el costo desde datos de compra:
+            </Typography>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 2, alignItems: 'start' }}>
+              <TextField
+                label="Cantidad Comprada"
+                type="number"
+                value={purchaseQuantity}
+                onChange={(e) => setPurchaseQuantity(e.target.value)}
+                inputProps={{ step: '0.01', min: 0 }}
+                helperText="Ej: 400 (gramos)"
+              />
+              <TextField
+                label="Costo Total"
+                type="number"
+                value={purchaseCost}
+                onChange={(e) => setPurchaseCost(e.target.value)}
+                inputProps={{ step: '0.01', min: 0 }}
+                helperText="Ej: $8000"
+              />
+              <TextField
+                select
+                label="Unidad de Compra"
+                value={purchaseUnit}
+                onChange={(e) => setPurchaseUnit(e.target.value)}
+                helperText="Unidad usada"
+              >
+                {UNIT_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Button
+                variant="outlined"
+                onClick={calculateCostFromPurchase}
+                sx={{ height: '56px' }}
+                startIcon={<Calculate />}
+              >
+                Calcular
+              </Button>
+            </Box>
+
+            {calculatedCostPerUnit !== null && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Costo calculado: <strong>${calculatedCostPerUnit.toFixed(4)}</strong> por gramo/ml
+                <br />
+                <Typography variant="caption">
+                  (${purchaseCost} ÷ {purchaseQuantity} {getUnitLabel(purchaseUnit as UnitType, parseFloat(purchaseQuantity) > 1)} = ${calculatedCostPerUnit.toFixed(4)}/g o ml)
+                </Typography>
+              </Alert>
+            )}
 
             <Divider sx={{ my: 2 }} />
 

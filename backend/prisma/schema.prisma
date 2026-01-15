@@ -96,22 +96,29 @@ model AuditLog {
 // INGREDIENTS & RECIPES
 // ============================================
 
+// Unidades de medida - Para visualización y entrada de datos
+// Internamente: sólidos -> gramos, líquidos -> mililitros
 enum UnitType {
-  KILOGRAM
-  GRAM
-  LITER
-  MILLILITER
-  UNIT
+  KILOGRAM   // Display: se almacena en gramos (x1000)
+  GRAM       // Base para sólidos
+  MILLILITER // Base para líquidos
+  UNIT       // Unidades (ej: 1 huevo, 1 lata)
 }
 
 model Ingredient {
   id              String    @id @default(uuid())
   name            String
   description     String?
-  unit            UnitType
-  currentCost     Decimal   @db.Decimal(10, 2)
+  unit            UnitType  // Unidad preferida de visualización (KILOGRAM, GRAM, MILLILITER, UNIT)
+  currentCost     Decimal   @db.Decimal(10, 4) // Costo por unidad BASE (gramo o ml según tipo)
   minStock        Decimal?  @db.Decimal(10, 2)
   wastePercentage Decimal?  @db.Decimal(5, 2) // Porcentaje de merma al procesar (ej: 15% al pelar papas)
+  
+  // Campos para registrar última compra - se ingresan en la unidad preferida, se convierten a base
+  lastPurchaseQuantity Decimal? @db.Decimal(10, 3) // Cantidad comprada (en unidad base: gramos o ml)
+  lastPurchaseCost     Decimal? @db.Decimal(10, 2) // Costo total de la compra
+  lastPurchaseUnit     UnitType? // Unidad usada en la compra (para referencia)
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -170,8 +177,8 @@ model Recipe {
 model RecipeItem {
   id        String   @id @default(uuid())
   recipeId  String
-  amount    Decimal  @db.Decimal(10, 3)
-  unit      UnitType
+  amount    Decimal  @db.Decimal(10, 3) // Cantidad en unidad BASE (gramos para sólidos, ml para líquidos)
+  unit      UnitType // Unidad de visualización original
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

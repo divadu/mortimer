@@ -1,11 +1,10 @@
 import api from './api';
 
-export type UnitType = 'KILOGRAM' | 'GRAM' | 'LITER' | 'MILLILITER' | 'UNIT';
+export type UnitType = 'KILOGRAM' | 'GRAM' | 'MILLILITER' | 'UNIT';
 
 export const UnitTypeEnum = {
   KILOGRAM: 'KILOGRAM' as UnitType,
   GRAM: 'GRAM' as UnitType,
-  LITER: 'LITER' as UnitType,
   MILLILITER: 'MILLILITER' as UnitType,
   UNIT: 'UNIT' as UnitType,
 };
@@ -24,9 +23,12 @@ export interface Ingredient {
   id: string;
   name: string;
   description?: string;
-  unit: UnitType;
-  currentCost: number;
+  unit: UnitType; // Unidad de visualización preferida
+  currentCost: number; // Costo por unidad BASE (gramo o ml)
   wastePercentage?: number;
+  lastPurchaseQuantity?: number; // Cantidad última compra (en unidad base)
+  lastPurchaseCost?: number; // Costo total última compra
+  lastPurchaseUnit?: UnitType; // Unidad usada en la compra
   categoryId?: string;
   supplierId?: string;
   category?: Category;
@@ -47,8 +49,12 @@ export interface CreateIngredientDto {
   name: string;
   description?: string;
   unit: UnitType;
-  currentCost: number;
+  currentCost: number; // Costo por unidad BASE (gramo o ml)
   wastePercentage?: number;
+  // Campos opcionales para cálculo automático de costo
+  purchaseQuantity?: number; // Cantidad comprada (en purchaseUnit)
+  purchaseCost?: number; // Costo total de la compra
+  purchaseUnit?: UnitType; // Unidad de la compra
 }
 
 export interface UpdateIngredientDto extends Partial<CreateIngredientDto> {}

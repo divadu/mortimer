@@ -2,21 +2,56 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
+import { convertToBaseUnit } from '../common/utils/unit-converter';
 
 @Injectable()
 export class IngredientsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createIngredientDto: CreateIngredientDto, userId: string) {
+    // Si se proporciona información de compra, calcular automáticamente el costo por unidad base
+    let calculatedCost = createIngredientDto.currentCost;
+    let lastPurchaseQuantity: number | undefined;
+    let lastPurchaseCost: number | undefined;
+    let lastPurchaseUnit = createIngredientDto.purchaseUnit;
+
+    if (
+      createIngredientDto.purchaseQuantity &&
+      createIngredientDto.purchaseCost &&
+      createIngredientDto.purchaseUnit
+    ) {
+      // Convertir cantidad de compra a unidad base
+      const quantityInBaseUnit = convertToBaseUnit(
+        createIngredientDto.purchaseQuantity,
+        createIngredientDto.purchaseUnit,
+      );
+
+      // Calcular costo por unidad base
+      calculatedCost = createIngredientDto.purchaseCost / quantityInBaseUnit;
+
+      lastPurchaseQuantity = quantityInBaseUnit;
+      lastPurchaseCost = createIngredientDto.purchaseCost;
+    }
+
     const ingredient = await this.prisma.ingredient.create({
-      data: createIngredientDto,
+      data: {
+        name: createIngredientDto.name,
+        description: createIngredientDto.description,
+        unit: createIngredientDto.unit,
+        currentCost: calculatedCost,
+        minStock: createIngredientDto.minStock,
+        wastePercentage: createIngredientDto.wastePercentage,
+        lastPurchaseQuantity,
+        lastPurchaseCost,
+        lastPurchaseUnit,
+      },
     });
 
     // Create cost history entry
     await this.prisma.ingredientCostHistory.create({
       data: {
         ingredientId: ingredient.id,
-        cost: createIngredientDto.currentCost,
+        cost: calculatedCost,
       },
     });
 
@@ -94,20 +129,51 @@ export class IngredientsService {
   async update(id: string, updateIngredientDto: UpdateIngredientDto, userId: string) {
     const existing = await this.findOne(id);
 
+    // Si se proporciona información de compra, calcular automáticamente el costo por unidad base
+    let calculatedCost = updateIngredientDto.currentCost;
+    let lastPurchaseQuantity: number | undefined;
+    let lastPurchaseCost: number | undefined;
+    let lastPurchaseUnit = updateIngredientDto.purchaseUnit;
+
+    if (
+      updateIngredientDto.purchaseQuantity &&
+      updateIngredientDto.purchaseCost &&
+      updateIngredientDto.purchaseUnit
+    ) {
+      // Convertir cantidad de compra a unidad base
+      const quantityInBaseUnit = convertToBaseUnit(
+        updateIngredientDto.purchaseQuantity,
+        updateIngredientDto.purchaseUnit,
+      );
+
+      // Calcular costo por unidad base
+      calculatedCost = updateIngredientDto.purchaseCost / quantityInBaseUnit;
+
+      lastPurchaseQuantity = quantityInBaseUnit;
+      lastPurchaseCost = updateIngredientDto.purchaseCost;
+    }
+
     const updated = await this.prisma.ingredient.update({
       where: { id },
-      data: updateIngredientDto,
+      data: {
+        ...updateIngredientDto,
+        currentCost: calculatedCost !== undefined ? calculatedCost : updateIngredientDto.currentCost,
+        lastPurchaseQuantity,
+        lastPurchaseCost,
+        lastPurchaseUnit,
+      },
     });
 
     // If cost changed, create history entry
+    const costToCompare = calculatedCost !== undefined ? calculatedCost : updateIngredientDto.currentCost;
     if (
-      updateIngredientDto.currentCost !== undefined &&
-      updateIngredientDto.currentCost !== Number(existing.currentCost)
+      costToCompare !== undefined &&
+      costToCompare !== Number(existing.currentCost)
     ) {
       await this.prisma.ingredientCostHistory.create({
         data: {
           ingredientId: id,
-          cost: updateIngredientDto.currentCost,
+          cost: costToCompare,
         },
       });
     }
