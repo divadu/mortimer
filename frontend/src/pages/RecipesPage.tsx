@@ -30,7 +30,6 @@ interface Recipe {
   name: string;
   description?: string;
   servings: number;
-  wastePercentage?: number;
   items?: { length: number };
 }
 
@@ -99,7 +98,6 @@ export default function RecipesPage() {
               <TableCell>Nombre</TableCell>
               <TableCell>Descripción</TableCell>
               <TableCell align="center">Porciones</TableCell>
-              <TableCell align="center">Merma</TableCell>
               <TableCell align="center">Ingredientes</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
@@ -107,13 +105,13 @@ export default function RecipesPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={5} align="center">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : data?.data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={5} align="center">
                   No hay recetas disponibles
                 </TableCell>
               </TableRow>
@@ -123,9 +121,6 @@ export default function RecipesPage() {
                   <TableCell>{recipe.name}</TableCell>
                   <TableCell>{recipe.description || '-'}</TableCell>
                   <TableCell align="center">{recipe.servings}</TableCell>
-                  <TableCell align="center">
-                    {recipe.wastePercentage ? `${recipe.wastePercentage}%` : '-'}
-                  </TableCell>
                   <TableCell align="center">
                     <Chip 
                       label={recipe.items?.length || 0} 

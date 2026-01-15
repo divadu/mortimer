@@ -26,6 +26,7 @@ export interface Ingredient {
   description?: string;
   unit: UnitType;
   currentCost: number;
+  wastePercentage?: number;
   categoryId?: string;
   supplierId?: string;
   category?: Category;
@@ -47,6 +48,7 @@ export interface CreateIngredientDto {
   description?: string;
   unit: UnitType;
   currentCost: number;
+  wastePercentage?: number;
 }
 
 export interface UpdateIngredientDto extends Partial<CreateIngredientDto> {}

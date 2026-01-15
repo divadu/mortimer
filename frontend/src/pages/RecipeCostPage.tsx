@@ -61,12 +61,7 @@ export default function RecipeCostPage() {
               {recipe.description}
             </Typography>
           )}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Chip label={`${recipe.servings} porciones`} color="primary" />
-            {recipe.wastePercentage && (
-              <Chip label={`${recipe.wastePercentage}% merma`} color="warning" />
-            )}
-          </Box>
+          <Chip label={`${recipe.servings} porciones`} color="primary" />
         </Paper>
       )}
 

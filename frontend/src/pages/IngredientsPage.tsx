@@ -134,19 +134,20 @@ export default function IngredientsPage() {
               <TableCell>Descripción</TableCell>
               <TableCell>Unidad</TableCell>
               <TableCell align="right">Costo Actual</TableCell>
+              <TableCell align="center">Merma</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   No se encontraron insumos
                 </TableCell>
               </TableRow>
@@ -164,6 +165,17 @@ export default function IngredientsPage() {
                     <Typography fontWeight="medium">
                       {formatCurrency(ingredient.currentCost)}
                     </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    {ingredient.wastePercentage ? (
+                      <Chip 
+                        label={`${ingredient.wastePercentage}%`} 
+                        size="small" 
+                        color="warning"
+                      />
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell align="right">
                     <IconButton

@@ -33,7 +33,6 @@ interface FormData {
   name: string;
   description: string;
   servings: number;
-  wastePercentage: number;
   items: RecipeItem[];
 }
 
@@ -47,7 +46,6 @@ export default function RecipeFormPage() {
     name: '',
     description: '',
     servings: 1,
-    wastePercentage: 0,
     items: [],
   });
 
@@ -82,7 +80,6 @@ export default function RecipeFormPage() {
         name: recipe.name,
         description: recipe.description || '',
         servings: recipe.servings,
-        wastePercentage: recipe.wastePercentage || 0,
         items: recipe.items || [],
       });
     }
@@ -208,14 +205,6 @@ export default function RecipeFormPage() {
               label="Descripción"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              type="number"
-              label="Porcentaje de Merma (%)"
-              value={formData.wastePercentage}
-              onChange={(e) => setFormData({ ...formData, wastePercentage: parseFloat(e.target.value) || 0 })}
-              inputProps={{ min: 0, max: 100, step: 0.1 }}
             />
           </Stack>
         </Paper>

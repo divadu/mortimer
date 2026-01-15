@@ -54,6 +54,7 @@ export default function IngredientFormPage() {
         description: ingredient.description || '',
         unit: ingredient.unit,
         currentCost: ingredient.currentCost,
+        wastePercentage: ingredient.wastePercentage || 0,
       });
     }
   }, [ingredient, reset]);
@@ -177,6 +178,46 @@ export default function IngredientFormPage() {
                     inputProps={{ step: '0.01', min: 0 }}
                     error={!!errors.currentCost}
                     helperText={errors.currentCost?.message}
+                  />
+                )}
+              />
+
+              <Controller
+                name="wastePercentage"
+                control={control}
+                rules={{
+                  min: { value: 0, message: 'La merma debe ser mayor o igual a 0' },
+                  max: { value: 100, message: 'La merma no puede ser mayor a 100%' },
+                }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Porcentaje de Merma (%)"
+                    type="number"
+                    fullWidth
+                    inputProps={{ step: '0.1', min: 0, max: 100 }}
+                    error={!!errors.wastePercentage}
+                    helperText={errors.wastePercentage?.message || 'Desperdicio al procesar (ej: 15% al pelar papas)'}
+                  />
+                )}
+              />
+
+              <Controller
+                name="wastePercentage"
+                control={control}
+                rules={{
+                  min: { value: 0, message: 'La merma debe ser mayor o igual a 0' },
+                  max: { value: 100, message: 'La merma debe ser menor o igual a 100' },
+                }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Merma / Desperdicio (%)"
+                    type="number"
+                    fullWidth
+                    inputProps={{ step: '0.1', min: 0, max: 100 }}
+                    error={!!errors.wastePercentage}
+                    helperText={errors.wastePercentage?.message || 'Ej: 15% al pelar papas'}
                   />
                 )}
               />

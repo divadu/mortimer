@@ -13,6 +13,7 @@ export interface RecipeItem {
     name: string;
     unit: string;
     currentCost: number;
+    wastePercentage?: number;
   };
   preparation?: {
     id: string;
@@ -26,7 +27,6 @@ export interface Recipe {
   name: string;
   description?: string;
   servings: number;
-  wastePercentage?: number;
   items: RecipeItem[];
   createdAt: string;
   updatedAt: string;
@@ -37,7 +37,6 @@ export interface CreateRecipeDto {
   name: string;
   description?: string;
   servings: number;
-  wastePercentage?: number;
   items: RecipeItem[];
 }
 
