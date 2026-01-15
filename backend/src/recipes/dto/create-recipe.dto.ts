@@ -32,11 +32,6 @@ export class CreateRecipeDto {
   @Min(1)
   servings!: number;
 
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  wastePercentage?: number;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => RecipeItemDto)

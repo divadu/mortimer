@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 import { $Enums } from '@prisma/client';
 
 export class CreateIngredientDto {
@@ -16,4 +16,10 @@ export class CreateIngredientDto {
   @IsNumber()
   @Min(0)
   currentCost!: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  wastePercentage?: number;
 }

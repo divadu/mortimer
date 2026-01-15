@@ -105,15 +105,16 @@ enum UnitType {
 }
 
 model Ingredient {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  unit        UnitType
-  currentCost Decimal  @db.Decimal(10, 2)
-  minStock    Decimal? @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  unit            UnitType
+  currentCost     Decimal  @db.Decimal(10, 2)
+  minStock        Decimal? @db.Decimal(10, 2)
+  wastePercentage Decimal? @db.Decimal(5, 2) // Porcentaje de merma al procesar (ej: 15% al pelar papas)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
 
   costHistory    IngredientCostHistory[]
   recipeItems    RecipeItem[]
@@ -154,10 +155,7 @@ model Recipe {
   id          String   @id @default(uuid())
   name        String
   description String?
-  servings    Int      @default(1) // Número de porciones
-  mermaPercent Decimal? @db.Decimal(5, 2) // Porcentaje de merma
-  grossWeight Decimal? @db.Decimal(10, 3) // Peso bruto (con merma)
-  netWeight   Decimal? @db.Decimal(10, 3) // Peso neto (sin merma)
+  servings    Int      @default(1) // Número de porciones que rinde la receta
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
-import { Decimal } from '@prisma/client/runtime/library';
+import { $Enums } from '@prisma/client';
 
 interface CostBreakdownItem {
   name: string;
@@ -35,8 +35,8 @@ export class RecipesService {
           create: items.map((item) => ({
             ingredientId: item.ingredientId,
             preparationId: item.preparationId,
-            quantity: item.quantity,
-            notes: item.notes,
+            amount: item.quantity,
+            unit: $Enums.UnitType.UNIT, // Unidad por defecto, cada ingrediente tiene su propia unidad
           })),
         },
       },
@@ -145,8 +145,8 @@ export class RecipesService {
               create: items.map((item) => ({
                 ingredientId: item.ingredientId,
                 preparationId: item.preparationId,
-                quantity: item.quantity,
-                notes: item.notes,
+                amount: item.quantity,
+                unit: $Enums.UnitType.UNIT,
               })),
             }
           : undefined,
@@ -209,29 +209,41 @@ export class RecipesService {
 
     const breakdown: CostBreakdownItem[] = [];
     let totalCost = 0;
+    let totalCostWithWaste = 0;
 
     for (const item of recipe.items) {
       if (item.ingredient) {
-        const cost = Number(item.ingredient.currentCost) * Number(item.quantity);
-        totalCost += cost;
+        // Calcular costo base usando 'amount' del schema
+        const baseCost = Number(item.ingredient.currentCost) * Number(item.amount);
+        
+        // Aplicar merma del ingrediente
+        const wasteMultiplier = item.ingredient.wastePercentage
+          ? 1 + (Number(item.ingredient.wastePercentage) / 100)
+          : 1;
+        
+        const costWithWaste = baseCost * wasteMultiplier;
+        
+        totalCost += baseCost;
+        totalCostWithWaste += costWithWaste;
 
         breakdown.push({
           name: item.ingredient.name,
-          quantity: Number(item.quantity),
+          quantity: Number(item.amount),
           unit: item.ingredient.unit,
           unitCost: Number(item.ingredient.currentCost),
-          totalCost: cost,
+          totalCost: costWithWaste, // Mostrar costo con merma en el desglose
           type: 'ingredient',
         });
       } else if (item.preparation) {
         // Recursive cost calculation for preparations
         const prepCost = await this.calculatePreparationCost(item.preparation.id);
-        const cost = prepCost * Number(item.quantity);
+        const cost = prepCost * Number(item.amount);
         totalCost += cost;
+        totalCostWithWaste += cost; // Las preparaciones ya incluyen su merma
 
         breakdown.push({
           name: item.preparation.name,
-          quantity: Number(item.quantity),
+          quantity: Number(item.amount),
           unit: 'porción',
           unitCost: prepCost,
           totalCost: cost,
@@ -241,19 +253,12 @@ export class RecipesService {
     }
 
     const costPerServing = totalCost / recipe.servings;
-    
-    // Apply waste percentage if exists
-    const wasteMultiplier = recipe.wastePercentage 
-      ? 1 + (Number(recipe.wastePercentage) / 100)
-      : 1;
-    
-    const costWithWaste = totalCost * wasteMultiplier;
-    const costPerServingWithWaste = costWithWaste / recipe.servings;
+    const costPerServingWithWaste = totalCostWithWaste / recipe.servings;
 
     return {
       totalCost,
       costPerServing,
-      costWithWaste,
+      costWithWaste: totalCostWithWaste,
       costPerServingWithWaste,
       breakdown,
     };
@@ -262,37 +267,14 @@ export class RecipesService {
   private async calculatePreparationCost(preparationId: string): Promise<number> {
     const preparation = await this.prisma.preparation.findUnique({
       where: { id: preparationId },
-      include: {
-        items: {
-          include: {
-            ingredient: true,
-            preparation: true,
-          },
-        },
-      },
     });
 
-    if (!preparation || !preparation.items) {
+    if (!preparation) {
       return 0;
     }
 
-    let totalCost = 0;
-
-    for (const item of preparation.items) {
-      if (item.ingredient) {
-        totalCost += Number(item.ingredient.currentCost) * Number(item.quantity);
-      } else if (item.preparation) {
-        // Recursive calculation
-        const prepCost = await this.calculatePreparationCost(item.preparation.id);
-        totalCost += prepCost * Number(item.quantity);
-      }
-    }
-
-    // Apply waste if exists
-    if (preparation.wastePercentage) {
-      totalCost *= 1 + (Number(preparation.wastePercentage) / 100);
-    }
-
-    return totalCost / preparation.servings;
+    // Por ahora solo retornamos el costo de mano de obra
+    // En el futuro, cuando Preparation tenga sus propios items, calcularemos el costo total
+    return Number(preparation.laborCost) / Number(preparation.yield);
   }
 }
