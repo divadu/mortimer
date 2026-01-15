@@ -15,7 +15,6 @@ import {
   Alert,
   Chip,
   Divider,
-  Grid,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { recipesService } from '../services/recipesService';
@@ -86,8 +85,8 @@ export default function RecipeCostPage() {
               Resumen de Costos
             </Typography>
             <Divider sx={{ my: 2 }} />
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: '1 1 300px' }}>
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="body2" color="text.secondary">
                     Costo Total (sin merma)
@@ -104,8 +103,8 @@ export default function RecipeCostPage() {
                     {formatCurrency(costData.costPerServing)}
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box sx={{ flex: '1 1 300px' }}>
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="body2" color="text.secondary">
                     Costo Total (con merma)
@@ -122,8 +121,8 @@ export default function RecipeCostPage() {
                     {formatCurrency(costData.costPerServingWithWaste)}
                   </Typography>
                 </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Paper>
 
           <Paper sx={{ p: 3 }}>

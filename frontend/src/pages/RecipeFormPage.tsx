@@ -8,7 +8,7 @@ import {
   TextField,
   Box,
   Paper,
-  Grid,
+  Stack,
   IconButton,
   Table,
   TableBody,
@@ -16,15 +16,18 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Autocomplete,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { recipesService, RecipeItem } from '../services/recipesService';
+import { recipesService, type RecipeItem } from '../services/recipesService';
 import { ingredientsService } from '../services/ingredientsService';
+
+interface Ingredient {
+  id: string;
+  name: string;
+  unit: string;
+  currentCost: number;
+}
 
 interface FormData {
   name: string;
@@ -123,7 +126,7 @@ export default function RecipeFormPage() {
       return;
     }
 
-    const ingredient = ingredientsData?.data?.find((i: any) => i.id === newItem.selectedId);
+    const ingredient = ingredientsData?.data?.find((i: Ingredient) => i.id === newItem.selectedId);
     
     if (!ingredient) return;
 
@@ -179,8 +182,8 @@ export default function RecipeFormPage() {
 
       <form onSubmit={handleSubmit}>
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+          <Stack spacing={3}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 fullWidth
                 required
@@ -188,8 +191,6 @@ export default function RecipeFormPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 type="number"
@@ -199,28 +200,24 @@ export default function RecipeFormPage() {
                 onChange={(e) => setFormData({ ...formData, servings: parseInt(e.target.value) || 1 })}
                 inputProps={{ min: 1 }}
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                label="Descripción"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Porcentaje de Merma (%)"
-                value={formData.wastePercentage}
-                onChange={(e) => setFormData({ ...formData, wastePercentage: parseFloat(e.target.value) || 0 })}
-                inputProps={{ min: 0, max: 100, step: 0.1 }}
-              />
-            </Grid>
-          </Grid>
+            </Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="Descripción"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            <TextField
+              fullWidth
+              type="number"
+              label="Porcentaje de Merma (%)"
+              value={formData.wastePercentage}
+              onChange={(e) => setFormData({ ...formData, wastePercentage: parseFloat(e.target.value) || 0 })}
+              inputProps={{ min: 0, max: 100, step: 0.1 }}
+            />
+          </Stack>
         </Paper>
 
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -228,47 +225,40 @@ export default function RecipeFormPage() {
             Ingredientes
           </Typography>
 
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={5}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: '1 1 300px', minWidth: 200 }}>
               <Autocomplete
                 options={ingredientsData?.data || []}
-                getOptionLabel={(option: any) => `${option.name} (${option.unit})`}
-                value={ingredientsData?.data?.find((i: any) => i.id === newItem.selectedId) || null}
+                getOptionLabel={(option: Ingredient) => `${option.name} (${option.unit})`}
+                value={ingredientsData?.data?.find((i: Ingredient) => i.id === newItem.selectedId) || null}
                 onChange={(_, value) => setNewItem({ ...newItem, selectedId: value?.id || '' })}
                 renderInput={(params) => (
                   <TextField {...params} label="Ingrediente" fullWidth />
                 )}
               />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Cantidad"
-                value={newItem.quantity || ''}
-                onChange={(e) => setNewItem({ ...newItem, quantity: parseFloat(e.target.value) || 0 })}
-                inputProps={{ min: 0, step: 0.01 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Notas"
-                value={newItem.notes}
-                onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} md={1}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={handleAddItem}
-                sx={{ height: '56px' }}
-              >
-                <AddIcon />
-              </Button>
-            </Grid>
-          </Grid>
+            </Box>
+            <TextField
+              sx={{ flex: '0 1 150px', minWidth: 100 }}
+              type="number"
+              label="Cantidad"
+              value={newItem.quantity || ''}
+              onChange={(e) => setNewItem({ ...newItem, quantity: parseFloat(e.target.value) || 0 })}
+              inputProps={{ min: 0, step: 0.01 }}
+            />
+            <TextField
+              sx={{ flex: '1 1 150px', minWidth: 100 }}
+              label="Notas"
+              value={newItem.notes}
+              onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
+            />
+            <Button
+              variant="outlined"
+              onClick={handleAddItem}
+              sx={{ flex: '0 0 auto', height: '56px', minWidth: '56px' }}
+            >
+              <AddIcon />
+            </Button>
+          </Box>
 
           <TableContainer>
             <Table>

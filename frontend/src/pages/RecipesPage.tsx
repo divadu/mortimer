@@ -25,6 +25,15 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Calculate as CalculateIcon } from '@mui/icons-material';
 import { recipesService } from '../services/recipesService';
 
+interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  servings: number;
+  wastePercentage?: number;
+  items?: { length: number };
+}
+
 export default function RecipesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -56,13 +65,6 @@ export default function RecipesPage() {
     if (recipeToDelete) {
       deleteMutation.mutate(recipeToDelete);
     }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-    }).format(value);
   };
 
   return (
@@ -116,7 +118,7 @@ export default function RecipesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              data?.data?.map((recipe: any) => (
+              data?.data?.map((recipe: Recipe) => (
                 <TableRow key={recipe.id}>
                   <TableCell>{recipe.name}</TableCell>
                   <TableCell>{recipe.description || '-'}</TableCell>
