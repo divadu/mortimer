@@ -14,16 +14,16 @@ import {
 import { ArrowBack, Save } from '@mui/icons-material';
 import {
   ingredientsService,
-  UnitType,
+  UnitTypeEnum,
   type CreateIngredientDto,
 } from '../services/ingredientsService';
 
 const UNIT_OPTIONS = [
-  { value: UnitType.KG, label: 'Kilogramos (kg)' },
-  { value: UnitType.G, label: 'Gramos (g)' },
-  { value: UnitType.L, label: 'Litros (l)' },
-  { value: UnitType.ML, label: 'Mililitros (ml)' },
-  { value: UnitType.UNIT, label: 'Unidad' },
+  { value: UnitTypeEnum.KILOGRAM, label: 'Kilogramos (kg)' },
+  { value: UnitTypeEnum.GRAM, label: 'Gramos (g)' },
+  { value: UnitTypeEnum.LITER, label: 'Litros (l)' },
+  { value: UnitTypeEnum.MILLILITER, label: 'Mililitros (ml)' },
+  { value: UnitTypeEnum.UNIT, label: 'Unidad' },
 ];
 
 export default function IngredientFormPage() {
@@ -36,7 +36,7 @@ export default function IngredientFormPage() {
     defaultValues: {
       name: '',
       description: '',
-      unit: UnitType.KG,
+      unit: UnitTypeEnum.KILOGRAM,
       currentCost: 0,
     },
   });
@@ -54,8 +54,6 @@ export default function IngredientFormPage() {
         description: ingredient.description || '',
         unit: ingredient.unit,
         currentCost: ingredient.currentCost,
-        categoryId: ingredient.categoryId || '',
-        supplierId: ingredient.supplierId || '',
       });
     }
   }, [ingredient, reset]);

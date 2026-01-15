@@ -112,7 +112,7 @@ export default function IngredientCostHistoryPage() {
 
                 return (
                   <TableRow key={entry.id}>
-                    <TableCell>{formatDate(entry.changedAt)}</TableCell>
+                    <TableCell>{formatDate(entry.effectiveAt)}</TableCell>
                     <TableCell align="right">
                       <Typography fontWeight="medium">
                         {formatCurrency(entry.cost)}

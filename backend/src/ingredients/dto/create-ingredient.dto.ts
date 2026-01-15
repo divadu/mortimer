@@ -1,12 +1,5 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
-
-export enum UnitType {
-  KG = 'kg',
-  G = 'g',
-  L = 'l',
-  ML = 'ml',
-  UNIT = 'unit',
-}
+import { $Enums } from '@prisma/client';
 
 export class CreateIngredientDto {
   @IsString()
@@ -17,18 +10,10 @@ export class CreateIngredientDto {
   @IsOptional()
   description?: string;
 
-  @IsEnum(UnitType)
-  unit!: UnitType;
+  @IsEnum($Enums.UnitType)
+  unit!: $Enums.UnitType;
 
   @IsNumber()
   @Min(0)
   currentCost!: number;
-
-  @IsString()
-  @IsOptional()
-  categoryId?: string;
-
-  @IsString()
-  @IsOptional()
-  supplierId?: string;
 }

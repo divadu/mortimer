@@ -9,15 +9,7 @@ export class IngredientsService {
 
   async create(createIngredientDto: CreateIngredientDto, userId: string) {
     const ingredient = await this.prisma.ingredient.create({
-      data: {
-        ...createIngredientDto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      include: {
-        category: true,
-        supplier: true,
-      },
+      data: createIngredientDto,
     });
 
     // Create cost history entry
@@ -25,8 +17,6 @@ export class IngredientsService {
       data: {
         ingredientId: ingredient.id,
         cost: createIngredientDto.currentCost,
-        changedAt: new Date(),
-        changedBy: userId,
       },
     });
 
@@ -48,9 +38,8 @@ export class IngredientsService {
     skip?: number;
     take?: number;
     search?: string;
-    categoryId?: string;
   }) {
-    const { skip = 0, take = 20, search, categoryId } = params || {};
+    const { skip = 0, take = 20, search } = params || {};
 
     const where: any = {
       deletedAt: null,
@@ -63,19 +52,11 @@ export class IngredientsService {
       ];
     }
 
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
-
     const [ingredients, total] = await Promise.all([
       this.prisma.ingredient.findMany({
         where,
         skip,
         take,
-        include: {
-          category: true,
-          supplier: true,
-        },
         orderBy: { name: 'asc' },
       }),
       this.prisma.ingredient.count({ where }),
@@ -96,10 +77,8 @@ export class IngredientsService {
     const ingredient = await this.prisma.ingredient.findUnique({
       where: { id },
       include: {
-        category: true,
-        supplier: true,
         costHistory: {
-          orderBy: { changedAt: 'desc' },
+          orderBy: { effectiveAt: 'desc' },
           take: 10,
         },
       },
@@ -117,24 +96,18 @@ export class IngredientsService {
 
     const updated = await this.prisma.ingredient.update({
       where: { id },
-      data: {
-        ...updateIngredientDto,
-        updatedAt: new Date(),
-      },
-      include: {
-        category: true,
-        supplier: true,
-      },
+      data: updateIngredientDto,
     });
 
     // If cost changed, create history entry
-    if (updateIngredientDto.currentCost && updateIngredientDto.currentCost !== existing.currentCost) {
+    if (
+      updateIngredientDto.currentCost !== undefined &&
+      updateIngredientDto.currentCost !== Number(existing.currentCost)
+    ) {
       await this.prisma.ingredientCostHistory.create({
         data: {
           ingredientId: id,
           cost: updateIngredientDto.currentCost,
-          changedAt: new Date(),
-          changedBy: userId,
         },
       });
     }
@@ -158,11 +131,10 @@ export class IngredientsService {
     const existing = await this.findOne(id);
 
     // Soft delete
-    const deleted = await this.prisma.ingredient.update({
+    await this.prisma.ingredient.update({
       where: { id },
       data: {
         deletedAt: new Date(),
-        updatedAt: new Date(),
       },
     });
 
@@ -185,7 +157,7 @@ export class IngredientsService {
 
     return this.prisma.ingredientCostHistory.findMany({
       where: { ingredientId: id },
-      orderBy: { changedAt: 'desc' },
+      orderBy: { effectiveAt: 'desc' },
       take: 50,
     });
   }

@@ -32,11 +32,11 @@ import {
 import { ingredientsService, type Ingredient } from '../services/ingredientsService';
 
 const UNIT_LABELS = {
-  kg: 'Kilogramos',
-  g: 'Gramos',
-  l: 'Litros',
-  ml: 'Mililitros',
-  unit: 'Unidad',
+  KILOGRAM: 'Kilogramos',
+  GRAM: 'Gramos',
+  LITER: 'Litros',
+  MILLILITER: 'Mililitros',
+  UNIT: 'Unidad',
 };
 
 export default function IngredientsPage() {
@@ -134,21 +134,19 @@ export default function IngredientsPage() {
               <TableCell>Descripción</TableCell>
               <TableCell>Unidad</TableCell>
               <TableCell align="right">Costo Actual</TableCell>
-              <TableCell>Categoría</TableCell>
-              <TableCell>Proveedor</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={5} align="center">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={5} align="center">
                   No se encontraron insumos
                 </TableCell>
               </TableRow>
@@ -167,8 +165,6 @@ export default function IngredientsPage() {
                       {formatCurrency(ingredient.currentCost)}
                     </Typography>
                   </TableCell>
-                  <TableCell>{ingredient.category?.name || '-'}</TableCell>
-                  <TableCell>{ingredient.supplier?.name || '-'}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"

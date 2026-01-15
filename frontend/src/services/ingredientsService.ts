@@ -1,12 +1,14 @@
 import api from './api';
 
-export enum UnitType {
-  KG = 'kg',
-  G = 'g',
-  L = 'l',
-  ML = 'ml',
-  UNIT = 'unit',
-}
+export type UnitType = 'KILOGRAM' | 'GRAM' | 'LITER' | 'MILLILITER' | 'UNIT';
+
+export const UnitTypeEnum = {
+  KILOGRAM: 'KILOGRAM' as UnitType,
+  GRAM: 'GRAM' as UnitType,
+  LITER: 'LITER' as UnitType,
+  MILLILITER: 'MILLILITER' as UnitType,
+  UNIT: 'UNIT' as UnitType,
+};
 
 export interface Category {
   id: string;
@@ -36,8 +38,8 @@ export interface IngredientCostHistory {
   id: string;
   ingredientId: string;
   cost: number;
-  changedAt: string;
-  changedBy: string;
+  effectiveAt: string;
+  createdAt: string;
 }
 
 export interface CreateIngredientDto {
@@ -45,8 +47,6 @@ export interface CreateIngredientDto {
   description?: string;
   unit: UnitType;
   currentCost: number;
-  categoryId?: string;
-  supplierId?: string;
 }
 
 export interface UpdateIngredientDto extends Partial<CreateIngredientDto> {}
