@@ -4,7 +4,7 @@ import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { $Enums } from '@prisma/client';
 
-interface CostBreakdownItem {
+export interface CostBreakdownItem {
   name: string;
   quantity: number;
   unit: string;
@@ -13,7 +13,7 @@ interface CostBreakdownItem {
   type: 'ingredient' | 'preparation';
 }
 
-interface RecipeCostCalculation {
+export interface RecipeCostCalculation {
   totalCost: number;
   costPerServing: number;
   costWithWaste: number;
