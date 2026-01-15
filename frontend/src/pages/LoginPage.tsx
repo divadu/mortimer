@@ -14,8 +14,8 @@ import { Restaurant as RestaurantIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 
 export const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@mortimer.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -29,9 +29,13 @@ export const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       navigate('/');
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error al iniciar sesión');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      const errorMessage = 
+        err?.response?.data?.message || 
+        err?.message || 
+        'Error al iniciar sesión. Verifica tus credenciales.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
