@@ -21,6 +21,8 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { recipesService, type RecipeItem } from '../services/recipesService';
 import { ingredientsService } from '../services/ingredientsService';
+import { getBaseUnit, getUnitAbbreviation } from '../utils/unitConverter';
+import type { UnitType } from '../services/ingredientsService';
 
 interface Ingredient {
   id: string;
@@ -134,7 +136,7 @@ export default function RecipeFormPage() {
       ingredient: {
         id: ingredient.id,
         name: ingredient.name,
-        unit: ingredient.unit,
+        unit: getBaseUnit(ingredient.unit as UnitType), // Usar unidad base (g/ml/u)
         currentCost: ingredient.currentCost,
       },
     };
@@ -274,7 +276,12 @@ export default function RecipeFormPage() {
                     <TableRow key={index}>
                       <TableCell>{item.ingredient?.name || item.preparation?.name}</TableCell>
                       <TableCell align="right">{item.quantity}</TableCell>
-                      <TableCell>{item.ingredient?.unit || 'porción'}</TableCell>
+                      <TableCell>
+                        {item.ingredient 
+                          ? getUnitAbbreviation(getBaseUnit(item.ingredient.unit as UnitType))
+                          : 'porción'
+                        }
+                      </TableCell>
                       <TableCell align="right">
                         {item.ingredient ? formatCurrency(item.ingredient.currentCost) : '-'}
                       </TableCell>
