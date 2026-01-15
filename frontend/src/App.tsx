@@ -6,6 +6,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import IngredientsPage from './pages/IngredientsPage';
+import IngredientFormPage from './pages/IngredientFormPage';
+import IngredientCostHistoryPage from './pages/IngredientCostHistoryPage';
 
 const theme = createTheme({
   palette: {
@@ -48,7 +51,10 @@ function App() {
                 }
               >
                 <Route index element={<DashboardPage />} />
-                <Route path="ingredients" element={<div>Insumos (próximamente)</div>} />
+                <Route path="ingredients" element={<IngredientsPage />} />
+                <Route path="ingredients/new" element={<IngredientFormPage />} />
+                <Route path="ingredients/:id/edit" element={<IngredientFormPage />} />
+                <Route path="ingredients/:id/history" element={<IngredientCostHistoryPage />} />
                 <Route path="recipes" element={<div>Recetas (próximamente)</div>} />
                 <Route path="products" element={<div>Productos (próximamente)</div>} />
                 <Route path="tables" element={<div>Mesas (próximamente)</div>} />
