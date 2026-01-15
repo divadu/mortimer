@@ -30,7 +30,6 @@ export class IngredientsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-    @Query('categoryId') categoryId?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
@@ -40,7 +39,6 @@ export class IngredientsController {
       skip,
       take: limitNum,
       search,
-      categoryId,
     });
   }
 

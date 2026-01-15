@@ -9,6 +9,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import IngredientsPage from './pages/IngredientsPage';
 import IngredientFormPage from './pages/IngredientFormPage';
 import IngredientCostHistoryPage from './pages/IngredientCostHistoryPage';
+import RecipesPage from './pages/RecipesPage';
+import RecipeFormPage from './pages/RecipeFormPage';
+import RecipeCostPage from './pages/RecipeCostPage';
 
 const theme = createTheme({
   palette: {
@@ -55,7 +58,10 @@ function App() {
                 <Route path="ingredients/new" element={<IngredientFormPage />} />
                 <Route path="ingredients/:id/edit" element={<IngredientFormPage />} />
                 <Route path="ingredients/:id/history" element={<IngredientCostHistoryPage />} />
-                <Route path="recipes" element={<div>Recetas (próximamente)</div>} />
+                <Route path="recipes" element={<RecipesPage />} />
+                <Route path="recipes/new" element={<RecipeFormPage />} />
+                <Route path="recipes/:id/edit" element={<RecipeFormPage />} />
+                <Route path="recipes/:id/cost" element={<RecipeCostPage />} />
                 <Route path="products" element={<div>Productos (próximamente)</div>} />
                 <Route path="tables" element={<div>Mesas (próximamente)</div>} />
                 <Route path="orders" element={<div>Pedidos (próximamente)</div>} />
